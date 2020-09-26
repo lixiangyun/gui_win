@@ -145,8 +145,11 @@ func main() {
 	var user, password, host, subject *walk.LineEdit
 	var startBtn *walk.PushButton
 	MainWindow{
+		Icon: walk.IconInformation(),
 		Title:   "邮件群发器 By 一曲忧伤",
-		MinSize: Size{800, 600},
+		MinSize: Size{Width: 500, Height: 300},
+		Size: Size{Width: 500, Height: 300},
+		MaxSize: Size{Width: 500, Height: 300},
 		Layout:  HBox{},
 		Children: []Widget{
 			TextEdit{AssignTo: &emails, Text: SJ.Send, ToolTipText: "待发送邮件列表，每行一个"},
