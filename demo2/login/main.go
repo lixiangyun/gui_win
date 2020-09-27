@@ -15,9 +15,7 @@ func showAboutBoxAction() {
 
 var mainWindow *walk.MainWindow
 
-var statusBar *walk.StatusBarItem
-var networkBar *walk.StatusBarItem
-
+var StatusBar *walk.StatusBarItem
 var upFlowBar *walk.StatusBarItem
 var downFlowBar *walk.StatusBarItem
 
@@ -26,11 +24,14 @@ func randFloat() float32 {
 	return float32(up)/10
 }
 
+var mainWindowWidth = 300
+var mainWindowHeight = 600
+
 func init()  {
 	go func() {
 		for {
 			if mainWindow != nil && mainWindow.Visible() {
-				mainWindow.SetSize(walk.Size{500, 301})
+				mainWindow.SetSize(walk.Size{mainWindowWidth, mainWindowHeight})
 				break
 			}
 			time.Sleep(10 * time.Millisecond)
@@ -38,8 +39,7 @@ func init()  {
 
 		for {
 			time.Sleep(time.Second)
-			statusBar.SetText("normal")
-			networkBar.SetText("default")
+
 			upFlowBar.SetText(fmt.Sprintf("Up:%.1fkb/s", randFloat()))
 			downFlowBar.SetText(fmt.Sprintf("Down:%.1fkb/s", randFloat()))
 		}
@@ -49,24 +49,18 @@ func init()  {
 func StatusBarInit() []StatusBarItem {
 	return []StatusBarItem{
 		StatusBarItem{
-			AssignTo: &statusBar,
-			Text:     "status",
-			Width:    80,
-		},
-		StatusBarItem{
-			AssignTo: &networkBar,
-			Text:     "network",
-			Width:    80,
+			AssignTo: &StatusBar,
+			Width:    40,
+			Icon: walk.IconWarning(),
 		},
 		StatusBarItem{
 			AssignTo: &upFlowBar,
 			Width:    80,
-			Text:    "up:0kb/s",
+			Text:    "Up:0kb/s",
 		},
 		StatusBarItem{
 			AssignTo: &downFlowBar,
-			Width:    80,
-			Text:    "down:0kb/s",
+			Text:    "Down:0kb/s",
 		},
 	}
 }
@@ -76,6 +70,10 @@ type LoginInfo struct {
 	Password string
 	Remenber bool
 	Auto     bool
+}
+
+func SettingDialog()  {
+	
 }
 
 func LoginDialog(loginOld *LoginInfo)  *LoginInfo {
@@ -97,7 +95,7 @@ func LoginDialog(loginOld *LoginInfo)  *LoginInfo {
 			DataSource:     loginOld,
 			ErrorPresenter: ToolTipErrorPresenter{},
 		},
-		MinSize: Size{300, 220},
+		Size: Size{150, 220},
 		Layout:  VBox{},
 		Children: []Widget{
 			Composite{
@@ -258,19 +256,101 @@ func MenuBarInit() []MenuItem {
 	}
 }
 
+var selfIP *walk.LineEdit
+var statusShow *walk.LineEdit
+
+type Species struct {
+	Id   int
+	Name string
+}
+
+func KnownSpecies() []*Species {
+	return []*Species{
+		{1, "Dog"},
+		{2, "Cat"},
+		{3, "Bird"},
+		{4, "Fish"},
+		{5, "Elephant"},
+	}
+}
+
+func StatusWidget() []Widget {
+	return []Widget{
+		Label{
+			Text: "IP:",
+			MaxSize: Size{Width: 50},
+		},
+		LineEdit{
+			AssignTo: &selfIP,
+			ReadOnly: true,
+			Text: "192.168.0.1",
+		},
+		Label{
+			Text: "Network:",
+		},
+		ComboBox{
+			BindingMember: "Id",
+			DisplayMember: "Name",
+			Model:         KnownSpecies(),
+		},
+		Label{
+			Text: "Interface:",
+		},
+		ComboBox{
+			BindingMember: "Id",
+			DisplayMember: "Name",
+			Model:         KnownSpecies(),
+		},
+		Label{
+			Text: "Status:",
+		},
+		LineEdit{
+			AssignTo: &statusShow,
+			ReadOnly: true,
+			Text: "no login",
+		},
+		HSpacer{},
+		PushButton{
+			Text:     "Join",
+			OnClicked: func() {
+
+			},
+		},
+	}
+}
+
+func ListWidget() []Widget {
+	return []Widget{
+		TableView{
+			AlternatingRowBG: true,
+			CheckBoxes:       true,
+			ColumnsOrderable: true,
+			Columns: []TableViewColumn{
+				{Title: "Tag", Width: 60},
+				{Title: "IP", Width: 100},
+				{Title: "Status", Width: 50},
+			},
+		},
+	}
+}
+
 func main()  {
 	mw := MainWindow{
 		Icon: walk.IconInformation(),
 		Title:   "客户端程序",
-		Size: Size{500, 300},
-		Layout:  HBox{},
+		Size: Size{mainWindowWidth, mainWindowHeight-1},
+		Layout:  VBox{},
 		StatusBarItems: StatusBarInit(),
 		AssignTo: &mainWindow,
 		MenuItems: MenuBarInit(),
 		Children: []Widget{
-			TextEdit{
-				ReadOnly: true,
-				Text:     "Drop files here, from windows explorer...",
+			Composite{
+				Layout: Grid{Columns: 2},
+				Children: StatusWidget(),
+			},
+			Composite{
+				Layout: VBox{},
+				Children: ListWidget(),
 			},
 		},
 	}
