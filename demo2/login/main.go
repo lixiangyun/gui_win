@@ -16,8 +16,7 @@ func showAboutBoxAction() {
 var mainWindow *walk.MainWindow
 
 var StatusBar *walk.StatusBarItem
-var upFlowBar *walk.StatusBarItem
-var downFlowBar *walk.StatusBarItem
+var flowBar   *walk.StatusBarItem
 
 func randFloat() float32 {
 	up := mathrand.Int63() % 10240
@@ -37,11 +36,19 @@ func init()  {
 			time.Sleep(10 * time.Millisecond)
 		}
 
-		for {
-			time.Sleep(time.Second)
+		time.Sleep(5 * time.Second)
 
-			upFlowBar.SetText(fmt.Sprintf("Up:%.1fkb/s", randFloat()))
-			downFlowBar.SetText(fmt.Sprintf("Down:%.1fkb/s", randFloat()))
+		var cnt int
+		for {
+			if (cnt % 2) == 0 {
+				StatusBar.SetIcon(network_online1_icon)
+			} else {
+				StatusBar.SetIcon(network_online2_icon)
+			}
+			cnt++
+
+			time.Sleep(time.Second)
+			flowBar.SetText(fmt.Sprintf("%.1fkb/s", randFloat()))
 		}
 	}()
 }
@@ -50,17 +57,14 @@ func StatusBarInit() []StatusBarItem {
 	return []StatusBarItem{
 		StatusBarItem{
 			AssignTo: &StatusBar,
-			Width:    40,
-			Icon: walk.IconWarning(),
-		},
-		StatusBarItem{
-			AssignTo: &upFlowBar,
 			Width:    80,
-			Text:    "Up:0kb/s",
+			Icon:     network_offline_icon,
 		},
 		StatusBarItem{
-			AssignTo: &downFlowBar,
-			Text:    "Down:0kb/s",
+			AssignTo: &flowBar,
+			Icon:     network_flow_icon,
+			Width:    120,
+			Text:    "0kb/s",
 		},
 	}
 }
@@ -274,6 +278,9 @@ func KnownSpecies() []*Species {
 	}
 }
 
+var network *walk.ComboBox
+var iface *walk.ComboBox
+
 func StatusWidget() []Widget {
 	return []Widget{
 		Label{
@@ -289,6 +296,7 @@ func StatusWidget() []Widget {
 			Text: "Network:",
 		},
 		ComboBox{
+			AssignTo: &network,
 			BindingMember: "Id",
 			DisplayMember: "Name",
 			Model:         KnownSpecies(),
@@ -297,6 +305,8 @@ func StatusWidget() []Widget {
 			Text: "Interface:",
 		},
 		ComboBox{
+			AssignTo: &iface,
+
 			BindingMember: "Id",
 			DisplayMember: "Name",
 			Model:         KnownSpecies(),
@@ -310,10 +320,22 @@ func StatusWidget() []Widget {
 			Text: "no login",
 		},
 		HSpacer{},
-		PushButton{
-			Text:     "Join",
-			OnClicked: func() {
 
+		Composite{
+			Layout: Grid{Columns: 2, MarginsZero: true},
+			Children: []Widget{
+				PushButton{
+					Text:     "&Join",
+					OnClicked: func() {
+
+					},
+				},
+				PushButton{
+					Text:     "&Leave",
+					OnClicked: func() {
+
+					},
+				},
 			},
 		},
 	}
@@ -334,9 +356,52 @@ func ListWidget() []Widget {
 	}
 }
 
+var main_windows_icon *walk.Icon
+var network_offline_icon *walk.Icon
+var network_online1_icon *walk.Icon
+var network_online2_icon *walk.Icon
+var network_flow_icon *walk.Icon
+
+
+func iconLoad() error {
+	var err error
+
+	main_windows_icon, err = walk.NewIconFromFile("./main_windows.ico")
+	if err != nil {
+		return err
+	}
+
+	network_offline_icon, err = walk.NewIconFromFile("./network_offline.ico")
+	if err != nil {
+		return err
+	}
+
+	network_online1_icon, err = walk.NewIconFromFile("./network_online1.ico")
+	if err != nil {
+		return err
+	}
+
+	network_online2_icon, err = walk.NewIconFromFile("./network_online2.ico")
+	if err != nil {
+		return err
+	}
+
+	network_flow_icon, err = walk.NewIconFromFile("./network_flow.ico")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main()  {
+	err := iconLoad()
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
 	mw := MainWindow{
-		Icon: walk.IconInformation(),
+		Icon: main_windows_icon,
 		Title:   "客户端程序",
 		Size: Size{mainWindowWidth, mainWindowHeight-1},
 		Layout:  VBox{},
